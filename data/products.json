@@ -1,0 +1,23 @@
+[
+  { "id": "coca-225", "nombre": "Coca-Cola 2.25L", "marca": "Coca-Cola", "familia": "gaseosas", "precioCaja": 8400, "unidadesPorCaja": 6, "complementos": ["snacks", "galletitas"] },
+  { "id": "sprite-225", "nombre": "Sprite 2.25L", "marca": "Coca-Cola", "familia": "gaseosas", "precioCaja": 7800, "unidadesPorCaja": 6, "complementos": ["snacks", "galletitas"] },
+  { "id": "fanta-225", "nombre": "Fanta 2.25L", "marca": "Coca-Cola", "familia": "gaseosas", "precioCaja": 7800, "unidadesPorCaja": 6, "complementos": ["snacks", "galletitas"] },
+  { "id": "pepsi-225", "nombre": "Pepsi 2.25L", "marca": "Pepsi", "familia": "gaseosas", "precioCaja": 7200, "unidadesPorCaja": 6, "complementos": ["snacks", "galletitas"] },
+  { "id": "7up-225", "nombre": "7Up 2.25L", "marca": "Pepsi", "familia": "gaseosas", "precioCaja": 6900, "unidadesPorCaja": 6, "complementos": ["snacks", "galletitas"] },
+
+  { "id": "quilmes-1l", "nombre": "Quilmes 1L", "marca": "Quilmes", "familia": "cervezas", "precioCaja": 11500, "unidadesPorCaja": 12, "complementos": ["snacks"] },
+  { "id": "brahma-1l", "nombre": "Brahma 1L", "marca": "Brahma", "familia": "cervezas", "precioCaja": 10800, "unidadesPorCaja": 12, "complementos": ["snacks"] },
+  { "id": "stella-1l", "nombre": "Stella Artois 1L", "marca": "Stella Artois", "familia": "cervezas", "precioCaja": 14200, "unidadesPorCaja": 12, "complementos": ["snacks"] },
+
+  { "id": "ace-800", "nombre": "Jabón en Polvo Ace 800g", "marca": "Ace", "familia": "jabon_polvo", "precioCaja": 9600, "unidadesPorCaja": 10, "complementos": [] },
+  { "id": "skip-800", "nombre": "Jabón en Polvo Skip 800g", "marca": "Skip", "familia": "jabon_polvo", "precioCaja": 10200, "unidadesPorCaja": 10, "complementos": [] },
+
+  { "id": "knorr-caldo", "nombre": "Knorr Caldo de Gallina x12", "marca": "Knorr", "familia": "caldos", "precioCaja": 5400, "unidadesPorCaja": 24, "complementos": [] },
+  { "id": "knorr-sopa", "nombre": "Knorr Sopa Crema de Zapallo", "marca": "Knorr", "familia": "caldos", "precioCaja": 4800, "unidadesPorCaja": 24, "complementos": [] },
+
+  { "id": "oreo-118", "nombre": "Galletitas Oreo 118g", "marca": "Oreo", "familia": "galletitas", "precioCaja": 6600, "unidadesPorCaja": 12, "complementos": ["gaseosas"] },
+  { "id": "terrabusi-var", "nombre": "Terrabusi Surtido 400g", "marca": "Terrabusi", "familia": "galletitas", "precioCaja": 7100, "unidadesPorCaja": 12, "complementos": ["gaseosas"] },
+
+  { "id": "lays-clasicas", "nombre": "Lays Clásicas 145g", "marca": "Lays", "familia": "snacks", "precioCaja": 8900, "unidadesPorCaja": 18, "complementos": ["gaseosas", "cervezas"] },
+  { "id": "doritos-150", "nombre": "Doritos Queso 150g", "marca": "Doritos", "familia": "snacks", "precioCaja": 9300, "unidadesPorCaja": 18, "complementos": ["gaseosas", "cervezas"] }
+]

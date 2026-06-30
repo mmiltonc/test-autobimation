@@ -1,0 +1,41 @@
+[
+  {
+    "id": "don-jose",
+    "nombre": "Almacén Don José",
+    "frecuenciaDias": 7,
+    "historial": [
+      { "sku": "coca-225", "cajas": 10, "fecha": "2026-06-12" },
+      { "sku": "quilmes-1l", "cajas": 6, "fecha": "2026-06-12" },
+      { "sku": "coca-225", "cajas": 8, "fecha": "2026-06-05" },
+      { "sku": "quilmes-1l", "cajas": 5, "fecha": "2026-06-05" }
+    ]
+  },
+  {
+    "id": "la-esquina",
+    "nombre": "Kiosco La Esquina",
+    "frecuenciaDias": 10,
+    "historial": [
+      { "sku": "pepsi-225", "cajas": 4, "fecha": "2026-06-24" },
+      { "sku": "7up-225", "cajas": 2, "fecha": "2026-06-24" },
+      { "sku": "oreo-118", "cajas": 3, "fecha": "2026-06-24" }
+    ]
+  },
+  {
+    "id": "super-norte",
+    "nombre": "Supermercado Norte",
+    "frecuenciaDias": 5,
+    "historial": [
+      { "sku": "coca-225", "cajas": 30, "fecha": "2026-06-27" },
+      { "sku": "ace-800", "cajas": 15, "fecha": "2026-06-27" },
+      { "sku": "knorr-caldo", "cajas": 12, "fecha": "2026-06-27" },
+      { "sku": "lays-clasicas", "cajas": 20, "fecha": "2026-06-22" },
+      { "sku": "brahma-1l", "cajas": 18, "fecha": "2026-06-22" }
+    ]
+  },
+  {
+    "id": "recien-llegado",
+    "nombre": "Distribuidora El Recién Llegado",
+    "frecuenciaDias": null,
+    "historial": []
+  }
+]
