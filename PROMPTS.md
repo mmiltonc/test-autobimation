@@ -155,3 +155,124 @@ Funciona como esperábamos: reposición prioriza los productos de mayor volumen 
 Archivo modificado: src/recommend.ts (único cambio). Tests existentes en verde, sin tocar test/recommend.test.ts como pediste.
 
 ---
+
+## 2. Modficacion en logica Upsell
+
+Necesito modificar/adicionar una regla de negocio para el manejo de los upsellers.
+
+  Quiero que el upsell para un producto se pueda medir de la siguiente manera:
+  -Evaluar el historial del cliente
+  -Tomar los casos donde se repita un producto(SKU)
+  -Evaluar las cantidades de cajas solicitadas en cada ocasion
+  -Si el cliente fue aumentando la cantidad de cajas, por ejemplo de 3 a 6, ofrecer como upsell la misma diferencia hacia arriba. Que el proximo pedido sea de 9 cajas.
+  -En el caso de que la cantidad disminuya, volver a ofrecer la cantidad que solicito anteriormente que fue mayor.
+
+  Evalua esta solucion y decime si es viable o tiene algun inconveniente para su implementacion.
+
+  ### Resultado
+
+  Evaluación de la regla de upsell
+
+La idea es viable y simple de calcular, pero hay 4 puntos que conviene resolver antes de tocar código — dos son detalles técnicos que puedo asumir con un criterio razonable, y dos son decisiones de negocio que prefiero confirmar con vos.
+
+Lo que funciona bien tal cual lo planteaste:
+- Detectar SKUs repetidos en el historial, comparar cantidades, sugerir última + diferencia si viene subiendo, o la cantidad mayor anterior si bajó — es una regla puramente aritmética, sin dependencias nuevas.
+- Con los datos actuales, solo don-jose tiene un SKU comprado 2+ veces (coca-225: 8→10 cajas, quilmes-1l: 5→6 cajas) — ambos casos "creciente", ambos elegibles a upsell. la-esquina y super-norte no tienen ningún SKU repetido en su historial, así que con esta muestra de datos nunca van a disparar upsell (no es un problema de la regla, es la data).
+
+Detalles técnicos que voy a resolver por mi cuenta (no requieren tu input):
+- El historial en el JSON no está garantizado en orden cronológico (de hecho el de don-jose está al revés: primero aparece 06-12, después 06-05). Voy a ordenar por fecha antes de comparar.
+- El upsell/reposición debería seguir gateado por estaVencido(), igual que ahora, para mantener consistencia con el resto de la lógica.
+
+## 3. Ampliacion en logica Upsell
+
+ En el caso que la evaluacion sea para mas de 3 productos del mismo SKU, realizar la siguiente evaluacion:
+  Si el pedido va en aumento, seguir ofreciendo la ultima + diferencia,
+  -Si el producto  fue en ascenso, pero luego en disminuyo, ofrecer el mayor mas proximo a ese ultimo valor.
+
+ ### Resultado
+
+ Entendido. Con eso la regla para 3+ compras del mismo SKU queda así (comparando siempre la penúltima vs la última cronológicamente):
+
+- Si la última ≥ penúltima (sigue en ascenso): ofrezco última + (última − penúltima).
+- Si la última < penúltima (bajó): busco entre todo el historial de ese SKU los valores mayores a la última compra, y ofrezco el más cercano por arriba (no el máximo histórico, el "escalón" más próximo). Ej: 3→6→9→5: valores mayores a 5 son {6, 9}, ofrezco 6.
+
+¿Es correcta esta lectura?
+
+Dos cosas que todavía me faltan para poder implementar:
+
+1. Caso empate (última == penúltima, ej. 5 y 5): ¿lo tratamos como upsell (no hay señal, cae a reposición normal) o como upsell mínimo (+1 caja)?
+2. Dónde va la cantidad sugerida en el mensaje. generatePitch(product, customer, motivo) no recibe cantidad, y Offer tampoco tiene un campo para "cantidad sugerida" — hoy el mock ni siquiera podría mencionar "12 cajas" en el texto. Para que el upsell diga algo útil (no solo "sumá X" genérico) necesito agregar un parámetro opcional a generatePitch y un campo opcional al tipo Offer (cambio aditivo, no rompe nada existente). ¿Confirmás que puedo tocar esas dos interfaces para esto?
+
+### Decisión tomada
+
+En caso de empate como upsell minimo y toquemos el generatePitch para mostrar la cantidad recomendada.
+
+## 4. Mejora en performance
+
+Revisa la implementacion actual, especialmente src/data.ts y src/recommend.ts.
+
+Quiero evaluar una mejora de rendimiento sin cambiar la logica de recomendaciones ni rediseñar el proyecto.
+
+Las dos ideas son:
+Reemplazar la busqueda actual de productos con products.find() por un Map de productos indexados por ID, construido una sola vez al cargar los datos.
+Ordenar los productos por ventas globales una sola vez y reutilizar ese ranking, en lugar de volver a ejecutar .sort() dentro de cada recomendacion.
+
+Por ahora no modifiques archivos.Primero analiza:
+
+En que lugares concretos se repiten busquedas u ordenamientos.
+Que mejora real aportarian estos cambios con muchos productos o muchas solicitudes.
+Si introducen algún riesgo, cambio de comportamiento o dificultad adicional.
+Si son mejoras razonables para el alcance de este ejercicio o si serian optimizaciones sin sentido.
+Que archivos seria necesario cambiar.
+
+### Resultado
+
+Confirma el análisis. Van los cinco puntos.
+
+1. Dónde se repiten
+
+productById (data.ts:15-16) — products.find(), O(n) lineal. Se llama por cada recommend():
+- recommend.ts:77 — una vez por SKU único del historial (dentro de candidatosCrossSell).
+- recommend.ts:135 — hasta REPOSICION_MAX (2) veces.
+
+Sin caché: O(n) × (SKUs únicos + 2) por request.
+
+Ordenamiento por ventas globales, .sort((a,b) => ventasGlobales(b.id) - ventasGlobales(a.id)) aparece tres veces con el mismo criterio:
+- recommend.ts:86 — sobre el subset filtrado de cross-sell.
+- recommend.ts:91 — sobre el catálogo completo, en comboEntrada.
+- recommend.ts:150 — sobre el catálogo completo otra vez, en el fallback.
+
+Cada llamada a recommend() puede disparar 2 de estos 3 sorts (el de cross-sell siempre; el de comboEntrada o el fallback según el caso).
+
+2. Mejora real con más productos/solicitudes
+
+- Map en productById: pasa de O(n) a O(1). Con 16 productos es irrelevante (nanosegundos); con un catálogo de miles de SKUs y muchas requests/segundo, elimina el factor n por completo. El beneficio escala con el tamaño del catálogo × volumen de tráfico, no con la lógica de negocio.
+- Ranking precalculado: evita repetir un O(n log n) en cada recommend(). El ahorro es mayor que el del Map en términos asintóticos (ordenar es más caro que buscar), pero además —y esto es lo más valioso hoy— elimina la duplicación del mismo criterio de sort en 3 lugares, algo que ya pide AGENTS.md independientemente del rendimiento.
+
+3. Riesgos / cambios de comportamiento
+
+- Map: prácticamente sin riesgo. Mismo resultado que .find() siempre que los id sean únicos (lo son en products.json, verificado). Es un cambio interno de data.ts, no toca la firma pública de productById.
+- Ranking precalculado: el único cuidado real es no mutar el array cacheado. .sort() de JS muta in-place; si se cachea el array ya ordenado, los tres sitios deben usar .filter() sobre él (nunca volver a .sort()), lo cual además es gratis: .filter() preserva el orden relativo, así que filtrar un array ya ordenado da un subconjunto ya ordenado, sin sort adicional. Esto depende de que products/customers sean estáticos durante la vida del proceso — hoy lo son (se cargan una vez del JSON y nadie los muta), igual que ya asume el código actual con ventasGlobalesPorSku.
+- Ninguno de los dos cambia el orden final de las ofertas, el criterio de desempate, ni ningún test existente.
+
+4. ¿Razonables o innecesarias para este ejercicio?
+
+Con 16 productos y 4 clientes, el impacto medible en rendimiento es nulo hoy — honestamente, ninguna aporta algo perceptible a esta escala. Dicho eso:
+
+- El Map lo haría igual: es la forma idiomática de hacer lookup por ID, no agrega complejidad ni dependencias, no cambia comportamiento, y es un cambio de una línea. Se justifica más por corrección/legibilidad que por performance.
+- El ranking precalculado lo enmarcaría principalmente como eliminación de duplicación (mismo .sort() repetido 3 veces), con el ahorro de CPU como beneficio secundario que solo importaría si el catálogo o el tráfico crecieran órdenes de magnitud. Como optimización pura a este tamaño sería difícil de defender; como limpieza de código, tiene sentido.
+
+Ninguna de las dos requiere rediseño ni nuevas dependencias — son cambios acotados y en línea con el alcance del ejercicio.
+
+5. Archivos a modificar
+
+- src/data.ts: cambiar la implementación interna de productById para usar un Map construido junto a products (sin tocar su firma pública).
+- src/recommend.ts: agregar un array productos ordenados por ventas globales precalculado una sola vez (junto a ventasGlobalesPorSku), y reemplazar los tres .sort() por .filter() sobre ese array en candidatosCrossSell, comboEntrada y el fallback.
+
+No haría falta tocar types.ts, pitch.ts, server.ts ni el test.
+
+¿Avanzamos con los dos cambios?
+
+### Decisión tomada
+
+Si, implementemos solo esos cambios.

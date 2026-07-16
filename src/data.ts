@@ -12,5 +12,7 @@ export const customers: Customer[] = JSON.parse(
   readFileSync(join(dir, "customers.json"), "utf8"),
 );
 
+const productsById = new Map(products.map((p) => [p.id, p]));
+
 export const productById = (id: string): Product | undefined =>
-  products.find((p) => p.id === id);
+  productsById.get(id);
